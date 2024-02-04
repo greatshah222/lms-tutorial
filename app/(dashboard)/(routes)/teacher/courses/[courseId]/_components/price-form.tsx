@@ -6,7 +6,7 @@ import axios from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { FormInput, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useState } from "react";
 
 import { Form, FormControl, FormMessage, FormField, FormItem } from "@/components/ui/form";
@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { Textarea } from "@/components/ui/textarea";
 import { Course } from "@prisma/client";
 import { formatPrice } from "@/lib/format";
 

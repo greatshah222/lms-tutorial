@@ -82,3 +82,88 @@ export async function PATCH(
 		return new NextResponse("Internal Error", { status: 500 });
 	}
 }
+
+export async function DELETE(
+	req: Request,
+	{ params }: { params: { courseId: string; chapterId: string } }
+) {
+	try {
+		const { userId } = auth();
+		const { courseId, chapterId } = params;
+
+		if (!userId) {
+			return new NextResponse("Unauthorized", { status: 401 });
+		}
+
+		const courseOwner = await db.course.findUnique({
+			where: {
+				id: courseId,
+				userId,
+			},
+		});
+
+		if (!courseOwner) {
+			return new NextResponse("Unauthorized", { status: 401 });
+		}
+
+		const chapter = await db.chapter.findUnique({
+			where: {
+				id: params.chapterId,
+				courseId,
+			},
+		});
+		if (!chapter) {
+			return new NextResponse("Not found", { status: 404 });
+		}
+
+		// checking if the chapter has a video url - we have to delete mux data as well in that case
+		if (chapter?.videoUrl) {
+			const existingMuxData = await db.muxData.findFirst({
+				where: {
+					chapterId,
+				},
+			});
+
+			if (existingMuxData) {
+				await Video.Assets.del(existingMuxData.assetId);
+
+				await db.muxData.delete({
+					where: {
+						id: existingMuxData.id,
+					},
+				});
+			}
+		}
+
+		const deletedChapter = await db.chapter.delete({
+			where: {
+				id: chapterId,
+			},
+		});
+
+		// ATLEAST ONE CHAPTER NEED TO BE AT LEAST ONE CHAPTER ->IF THIS IS THE LAST CHAPTER THAT IS GOING TO BE DELETED AND COURSE IS MARKED AS PUBLIC THEN WE MUST REVERSE IT
+
+		const publishedChapterInCourse = await db.chapter.findMany({
+			where: {
+				courseId,
+				isPublished: true,
+			},
+		});
+
+		if (!publishedChapterInCourse?.length) {
+			await db.course.update({
+				where: {
+					id: courseId,
+				},
+				data: {
+					isPublished: false,
+				},
+			});
+		}
+
+		return NextResponse.json(deletedChapter);
+	} catch (error) {
+		console.log("[COURSES_CHAPTER_ID_DELETE]", error);
+		return new NextResponse("Internal Error", { status: 500 });
+	}
+}
