@@ -80,3 +80,8 @@ body,
 		@apply bg-background text-foreground;
 	}
 }
+
+/* // text editor */
+.ql-container {
+	font-size: 16px !important;
+}
