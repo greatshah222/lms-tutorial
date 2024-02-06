@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 
 import "./globals.css";
 import { ToastProvider } from "@/components/providers/toast-provider";
+import { ConfettiProvider } from "@/components/providers/confetti-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
 			<html lang="en">
 				<body className={inter.className}>
 					<ToastProvider />
+					<ConfettiProvider />
 					{children}
 				</body>
 			</html>
