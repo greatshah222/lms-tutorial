@@ -4,34 +4,32 @@ datasource db {
   relationMode = "prisma"
 }
 
-// npx prisma generate
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 model Course {
-  id     String @id @default(uuid())
-  userId String
-  title  String @db.Text
-
+  id          String  @id @default(uuid())
+  userId      String
+  title       String  @db.Text
   description String? @db.Text
   imageUrl    String? @db.Text
   price       Float?
   isPublished Boolean @default(false)
 
-  attachments Attachment[]
-
-  Category   Category? @relation(fields: [categoryId], references: [id])
   categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
 
-  chapters  Chapter[]
-  purchases Purchase[]
+  chapters    Chapter[]
+  attachments Attachment[]
+  purchases   Purchase[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([categoryId])
+  @@fulltext([title])
 }
 
 model Category {
@@ -45,8 +43,8 @@ model Attachment {
   name String
   url  String @db.Text
 
-  courseId String?
-  Course   Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -61,8 +59,7 @@ model Chapter {
   videoUrl    String? @db.Text
   position    Int
   isPublished Boolean @default(false)
-
-  isFree Boolean @default(false)
+  isFree      Boolean @default(false)
 
   muxData MuxData?
 
@@ -79,20 +76,19 @@ model Chapter {
 
 model MuxData {
   id         String  @id @default(uuid())
-  playbackId String?
   assetId    String
+  playbackId String?
 
   chapterId String  @unique
   chapter   Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 }
 
 model UserProgress {
-  id String @id @default(uuid())
-
+  id     String @id @default(uuid())
   userId String
 
-  Chapter   Chapter? @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  chapterId String?
+  chapterId String
+  chapter   Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 
   isCompleted Boolean @default(false)
 
@@ -111,12 +107,13 @@ model Purchase {
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt()
 
+  @@unique([userId, courseId])
   @@index([courseId])
 }
 
-model StriperCustomer {
+model StripeCustomer {
   id               String @id @default(uuid())
   userId           String @unique
   stripeCustomerId String @unique
